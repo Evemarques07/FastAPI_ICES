@@ -7,13 +7,35 @@ from app.core.security import get_current_user
 
 router = APIRouter(prefix="/saidas", tags=["saidas"])
 
-@router.post("/", response_model=schemas.saida_financeira.SaidaFinanceiraOut)
+@router.post("/financeiro", response_model=schemas.saida_financeira.SaidaFinanceiraOut)
 def create_saida(saida: schemas.saida_financeira.SaidaFinanceiraCreate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
     db_saida = models.saida_financeira.SaidaFinanceira(**saida.dict())
     db.add(db_saida)
     db.commit()
     db.refresh(db_saida)
     return db_saida
+
+# Criar saída missionária
+@router.post("/missoes", response_model=dict)
+def create_saida_missionaria(saida: dict, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+    db_saida = models.saida_missionaria.SaidaMissionaria(**saida)
+    db.add(db_saida)
+    db.commit()
+    db.refresh(db_saida)
+    saida_dict = db_saida.__dict__.copy()
+    saida_dict.pop('_sa_instance_state', None)
+    return saida_dict
+
+# Criar saída de projetos
+@router.post("/projetos", response_model=dict)
+def create_saida_projetos(saida: dict, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+    db_saida = models.saida_projetos.SaidaProjetos(**saida)
+    db.add(db_saida)
+    db.commit()
+    db.refresh(db_saida)
+    saida_dict = db_saida.__dict__.copy()
+    saida_dict.pop('_sa_instance_state', None)
+    return saida_dict
 
 @router.get("/", response_model=List[schemas.saida_financeira.SaidaFinanceiraOut])
 def list_saidas(
