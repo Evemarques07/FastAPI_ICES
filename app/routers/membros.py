@@ -7,6 +7,19 @@ from fastapi import Query
 
 router = APIRouter(prefix="/membros", tags=["membros"])
 
+@router.get("/filtrar", response_model=List[schemas.membro.MembroOut])
+def filtrar_membros(
+    termo: str = Query(..., description="Nome ou CPF para busca"),
+    db: Session = Depends(database.get_db), user=Depends(get_current_user)
+):
+    query = db.query(models.membro.Membro).filter(models.membro.Membro.id != 1)
+    termo_like = f"%{termo}%"
+    membros = query.filter(
+        (models.membro.Membro.nome.ilike(termo_like)) |
+        (models.membro.Membro.cpf.ilike(termo_like))
+    ).all()
+    return membros
+
 @router.post("/", response_model=schemas.membro.MembroOut)
 def create_membro(membro: schemas.membro.MembroCreate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
     db_membro = models.membro.Membro(**membro.dict(exclude={"senha", "foto"}))
@@ -28,19 +41,6 @@ def get_membro(membro_id: int, db: Session = Depends(database.get_db), user=Depe
     if not membro:
         raise HTTPException(status_code=404, detail="Membro não encontrado")
     return membro
-
-@router.get("/filtrar", response_model=List[schemas.membro.MembroOut])
-def filtrar_membros(
-    termo: str = Query(..., description="Nome ou CPF para busca"),
-    db: Session = Depends(database.get_db), user=Depends(get_current_user)
-):
-    query = db.query(models.membro.Membro).filter(models.membro.Membro.id != 1)
-    termo_like = f"%{termo}%"
-    membros = query.filter(
-        (models.membro.Membro.nome.ilike(termo_like)) |
-        (models.membro.Membro.cpf.ilike(termo_like))
-    ).all()
-    return membros
 
 @router.get("/", response_model=List[schemas.membro.MembroOut])
 def list_membros(
