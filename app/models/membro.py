@@ -14,6 +14,7 @@ class Membro(Base):
     ativo = Column(Boolean, default=True)
     cpf = Column(String(255), unique=True, nullable=True)
     foto = Column(String(255), nullable=True)
+    tipo = Column(String(20), nullable=False, default='membro') 
     usuario = relationship('Usuario', back_populates='membro', uselist=False)
     cargos = relationship('CargoMembro', back_populates='membro')
     entradas = relationship('EntradaFinanceira', back_populates='membro')
