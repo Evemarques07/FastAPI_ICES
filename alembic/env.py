@@ -4,14 +4,14 @@ from alembic import context
 import sys
 import os
 from dotenv import load_dotenv  # 👈 importar dotenv
+# Carregar variáveis de ambiente do .env
+load_dotenv()
 # Ajustar caminho para a pasta raiz do projeto
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.database import Base
 from app.models import membro, usuario, cargo, entrada_financeira, saida_financeira, entrada_projetos, saida_projetos, entrada_missionaria, saida_missionaria
 
-# Carregar variáveis de ambiente do .env
-load_dotenv()
 
 # Obter configuração padrão do Alembic
 config = context.config
