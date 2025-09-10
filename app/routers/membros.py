@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app import models, schemas, database
 from app.core.security import get_current_user, get_password_hash
+from fastapi import Query
 
 router = APIRouter(prefix="/membros", tags=["membros"])
 
@@ -21,8 +22,12 @@ def create_membro(membro: schemas.membro.MembroCreate, db: Session = Depends(dat
         db.commit()
     return db_membro
 
-# Filtrar membros por nome ou cpf
-from fastapi import Query
+@router.get("/{membro_id}", response_model=schemas.membro.MembroOut)
+def get_membro(membro_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+    membro = db.query(models.membro.Membro).filter_by(id=membro_id).first()
+    if not membro:
+        raise HTTPException(status_code=404, detail="Membro não encontrado")
+    return membro
 
 @router.get("/filtrar", response_model=List[schemas.membro.MembroOut])
 def filtrar_membros(
@@ -44,7 +49,10 @@ def list_membros(
     db: Session = Depends(database.get_db),
     user=Depends(get_current_user)
 ):
-    membros = db.query(models.membro.Membro).filter(models.membro.Membro.id != 1).offset(skip).limit(limit).all()
+    membros = db.query(models.membro.Membro).filter(
+        models.membro.Membro.id != 1,
+        models.membro.Membro.tipo == 'membro'
+    ).offset(skip).limit(limit).all()
     return membros
 
 
@@ -60,14 +68,13 @@ def ativar_membro(membro_id: int, db: Session = Depends(database.get_db), user=D
 
 # Atualizar membro
 @router.patch("/{membro_id}", response_model=schemas.membro.MembroOut)
-def update_membro(membro_id: int, membro: schemas.membro.MembroCreate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def update_membro(membro_id: int, membro: schemas.membro.MembroUpdate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
     db_membro = db.query(models.membro.Membro).filter_by(id=membro_id).first()
     if not db_membro:
         raise HTTPException(status_code=404, detail="Membro não encontrado")
-    for key, value in membro.dict(exclude_unset=True, exclude={"senha", "foto"}).items():
+    membro_dict = membro.dict(exclude_unset=True)
+    for key, value in membro_dict.items():
         setattr(db_membro, key, value)
-    if membro.foto:
-        db_membro.foto = membro.foto
     db.commit()
     db.refresh(db_membro)
     return db_membro

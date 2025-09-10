@@ -7,3 +7,4 @@ from .membro import Membro
 from .cargo import Cargo, CargoMembro
 from .entrada_financeira import EntradaFinanceira
 from .saida_financeira import SaidaFinanceira
+from .evento import Evento
