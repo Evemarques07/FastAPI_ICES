@@ -29,7 +29,7 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: mysql+pymysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/${MYSQL_DATABASE}
+      DATABASE_URL: mysql+pymysql://root:root@db:3306/ices_db
       TZ: ${TZ}
       SECRET_KEY: ${SECRET_KEY}
     depends_on:
