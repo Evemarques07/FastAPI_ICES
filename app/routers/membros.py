@@ -55,6 +55,14 @@ def list_membros(
     ).offset(skip).limit(limit).all()
     return membros
 
+# listar todos da tabela membros
+@router.get("/todos/listar", response_model=List[schemas.membro.MembroOut])
+def list_membros_todos(skip: int = 0, limit: int = 20, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+    membros = db.query(models.membro.Membro).filter(
+        models.membro.Membro.id != 1
+    ).offset(skip).limit(limit).all()
+    return membros
+
 
 @router.patch("/{membro_id}/ativar", response_model=schemas.membro.MembroOut)
 def ativar_membro(membro_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
