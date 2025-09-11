@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app import models, database
+from app.schemas.escala import EscalaOutComMembro
 from app.schemas import escala
 from app.core.security import get_current_user
 from app.models.escala import Escala
@@ -16,10 +17,22 @@ def create_escala(escala_in: escala.EscalaCreate, db: Session = Depends(database
     db.refresh(db_escala)
     return db_escala
 
-@router.get("/", response_model=List[escala.EscalaOut])
+@router.get("/", response_model=List[escala.EscalaOutComMembro])
 def list_escalas(skip: int = 0, limit: int = 20, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
-    escalas = db.query(models.escala.Escala).offset(skip).limit(limit).all()
-    return escalas
+    escalas = db.query(Escala).join(Escala.membro).offset(skip).limit(limit).all()
+    result = []
+    for escala_obj in escalas:
+        result.append(
+            EscalaOutComMembro(
+                id=escala_obj.id,
+                membro_id=escala_obj.membro_id,
+                tipo=escala_obj.tipo,
+                data_escala=escala_obj.data_escala,
+                ativo=escala_obj.ativo,
+                nome_membro=escala_obj.membro.nome if escala_obj.membro else None
+            )
+        )
+    return result
 
 @router.get("/{escala_id}", response_model=escala.EscalaOut)
 def get_escala(escala_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
