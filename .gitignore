@@ -15,6 +15,7 @@ ENV/
 
 # Alembic
 alembic/versions/__pycache__/
+alembic/versions/*.py
 
 # Outros
 *.sqlite3
