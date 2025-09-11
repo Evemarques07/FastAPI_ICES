@@ -1,3 +1,4 @@
+from fastapi import Query
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
@@ -6,6 +7,17 @@ from app.schemas import evento
 from app.core.security import get_current_user
 
 router = APIRouter(prefix="/eventos", tags=["eventos"])
+
+# Buscar eventos pelo título usando LIKE
+@router.get("/buscar", response_model=List[evento.EventoOut])
+def buscar_eventos_por_titulo(
+    termo: str = Query(..., description="Título do evento"),
+    db: Session = Depends(database.get_db),
+    user=Depends(get_current_user)
+):
+    termo_like = f"%{termo}%"
+    eventos = db.query(models.evento.Evento).filter(models.evento.Evento.titulo.ilike(termo_like)).all()
+    return eventos
 
 @router.post("/", response_model=evento.EventoOut)
 def create_evento(evento: evento.EventoCreate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
