@@ -4,9 +4,9 @@ from typing import List, Optional
 from app import models, database
 from app.core.security import get_current_user
 
-router = APIRouter()
+router = APIRouter(prefix="/filtrar",tags=["filtros"])
 
-@router.get("/filtrar", response_model=List[dict])
+@router.get("/geral", response_model=List[dict])
 def filtrar_entradas_saidas_gerais(
     descricao: Optional[str] = Query(None),
     membro_id: Optional[int] = Query(None),

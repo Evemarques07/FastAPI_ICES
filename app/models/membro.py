@@ -20,3 +20,4 @@ class Membro(Base):
     entradas = relationship('EntradaFinanceira', back_populates='membro')
     entradas_projetos = relationship('app.models.entrada_projetos.EntradaProjetos', back_populates='membro')
     entradas_missionarias = relationship('app.models.entrada_missionaria.EntradaMissionaria', back_populates='membro')
+    escalas = relationship('Escala', back_populates='membro')
