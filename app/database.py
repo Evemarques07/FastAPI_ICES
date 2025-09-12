@@ -7,7 +7,13 @@ from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-engine = create_engine(DATABASE_URL)
+
+try:
+    engine = create_engine(DATABASE_URL)
+    with engine.connect() as conn:
+        print(f"Conexão com o banco realizada com sucesso: {conn}")
+except Exception as e:
+    print(f"Erro ao conectar no banco: {e}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
