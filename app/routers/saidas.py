@@ -3,12 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app import models, schemas, database
-from app.core.security import get_current_user
+from app.core.security import get_current_financeiro
 
 router = APIRouter(prefix="/saidas", tags=["saidas"])
 
 @router.post("/financeiro", response_model=schemas.saida_financeira.SaidaFinanceiraOut)
-def create_saida(saida: schemas.saida_financeira.SaidaFinanceiraCreate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def create_saida(saida: schemas.saida_financeira.SaidaFinanceiraCreate, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_saida = models.saida_financeira.SaidaFinanceira(**saida.dict())
     db.add(db_saida)
     db.commit()
@@ -17,8 +17,10 @@ def create_saida(saida: schemas.saida_financeira.SaidaFinanceiraCreate, db: Sess
 
 # Criar saída missionária
 @router.post("/missoes", response_model=dict)
-def create_saida_missionaria(saida: dict, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
-    db_saida = models.saida_missionaria.SaidaMissionaria(**saida)
+def create_saida_missionaria(saida: dict, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
+    # Remove o campo membro_id se vier do frontend
+    saida_filtrada = {k: v for k, v in saida.items() if k != 'membro_id'}
+    db_saida = models.saida_missionaria.SaidaMissionaria(**saida_filtrada)
     db.add(db_saida)
     db.commit()
     db.refresh(db_saida)
@@ -28,8 +30,10 @@ def create_saida_missionaria(saida: dict, db: Session = Depends(database.get_db)
 
 # Criar saída de projetos
 @router.post("/projetos", response_model=dict)
-def create_saida_projetos(saida: dict, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
-    db_saida = models.saida_projetos.SaidaProjetos(**saida)
+def create_saida_projetos(saida: dict, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
+    # Remove o campo membro_id se vier do frontend
+    saida_filtrada = {k: v for k, v in saida.items() if k != 'membro_id'}
+    db_saida = models.saida_projetos.SaidaProjetos(**saida_filtrada)
     db.add(db_saida)
     db.commit()
     db.refresh(db_saida)
@@ -39,7 +43,7 @@ def create_saida_projetos(saida: dict, db: Session = Depends(database.get_db), u
 
 @router.get("/", response_model=List[schemas.saida_financeira.SaidaFinanceiraOut])
 def list_saidas(
-    user=Depends(get_current_user),
+    user=Depends(get_current_financeiro),
     db: Session = Depends(database.get_db),
     skip: int = 0,
     limit: int = 10
@@ -50,7 +54,7 @@ def list_saidas(
 
 # Atualizar saída financeira
 @router.put("/financeiro/{saida_id}", response_model=schemas.saida_financeira.SaidaFinanceiraOut)
-def update_saida_financeira(saida_id: int, saida: schemas.saida_financeira.SaidaFinanceiraCreate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def update_saida_financeira(saida_id: int, saida: schemas.saida_financeira.SaidaFinanceiraCreate, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_saida = db.query(models.saida_financeira.SaidaFinanceira).filter_by(id=saida_id).first()
     if not db_saida:
         raise HTTPException(status_code=404, detail="Saída financeira não encontrada")
@@ -62,7 +66,7 @@ def update_saida_financeira(saida_id: int, saida: schemas.saida_financeira.Saida
 
 # Atualizar saída missionária
 @router.put("/missoes/{saida_id}", response_model=dict)
-def update_saida_missionaria(saida_id: int, saida: dict, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def update_saida_missionaria(saida_id: int, saida: dict, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_saida = db.query(models.saida_missionaria.SaidaMissionaria).filter_by(id=saida_id).first()
     if not db_saida:
         raise HTTPException(status_code=404, detail="Saída missionária não encontrada")
@@ -70,11 +74,13 @@ def update_saida_missionaria(saida_id: int, saida: dict, db: Session = Depends(d
         setattr(db_saida, key, value)
     db.commit()
     db.refresh(db_saida)
-    return db_saida.__dict__
+    saida_dict = db_saida.__dict__.copy()
+    saida_dict.pop('_sa_instance_state', None)
+    return saida_dict
 
 # Atualizar saída de projetos
 @router.put("/projetos/{saida_id}", response_model=dict)
-def update_saida_projetos(saida_id: int, saida: dict, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def update_saida_projetos(saida_id: int, saida: dict, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_saida = db.query(models.saida_projetos.SaidaProjetos).filter_by(id=saida_id).first()
     if not db_saida:
         raise HTTPException(status_code=404, detail="Saída de projetos não encontrada")
@@ -82,11 +88,13 @@ def update_saida_projetos(saida_id: int, saida: dict, db: Session = Depends(data
         setattr(db_saida, key, value)
     db.commit()
     db.refresh(db_saida)
-    return db_saida.__dict__
+    saida_dict = db_saida.__dict__.copy()
+    saida_dict.pop('_sa_instance_state', None)
+    return saida_dict
 
 # Deletar saída financeira
 @router.delete("/financeiro/{saida_id}", response_model=dict)
-def delete_saida_financeira(saida_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def delete_saida_financeira(saida_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_saida = db.query(models.saida_financeira.SaidaFinanceira).filter_by(id=saida_id).first()
     if not db_saida:
         raise HTTPException(status_code=404, detail="Saída financeira não encontrada")
@@ -96,7 +104,7 @@ def delete_saida_financeira(saida_id: int, db: Session = Depends(database.get_db
 
 # Deletar saída missionária
 @router.delete("/missoes/{saida_id}", response_model=dict)
-def delete_saida_missionaria(saida_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def delete_saida_missionaria(saida_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_saida = db.query(models.saida_missionaria.SaidaMissionaria).filter_by(id=saida_id).first()
     if not db_saida:
         raise HTTPException(status_code=404, detail="Saída missionária não encontrada")
@@ -106,7 +114,7 @@ def delete_saida_missionaria(saida_id: int, db: Session = Depends(database.get_d
 
 # Deletar saída de projetos
 @router.delete("/projetos/{saida_id}", response_model=dict)
-def delete_saida_projetos(saida_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def delete_saida_projetos(saida_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_saida = db.query(models.saida_projetos.SaidaProjetos).filter_by(id=saida_id).first()
     if not db_saida:
         raise HTTPException(status_code=404, detail="Saída de projetos não encontrada")
@@ -116,7 +124,7 @@ def delete_saida_projetos(saida_id: int, db: Session = Depends(database.get_db),
 
 @router.get("/missoes", response_model=List[dict])
 def list_saidas_missoes(
-    user=Depends(get_current_user),
+    user=Depends(get_current_financeiro),
     db: Session = Depends(database.get_db),
     skip: int = 0,
     limit: int = 10
@@ -133,7 +141,7 @@ def list_saidas_missoes(
 
 @router.get("/projetos", response_model=List[dict])
 def list_saidas_projetos(
-    user=Depends(get_current_user),
+    user=Depends(get_current_financeiro),
     db: Session = Depends(database.get_db),
     skip: int = 0,
     limit: int = 10
@@ -153,7 +161,7 @@ def soma_saidas(
     tipo: str = None,  # 'financeira', 'missionaria', 'projetos' ou None para todas
     data_inicio: str = None,
     data_fim: str = None,
-    user=Depends(get_current_user),
+    user=Depends(get_current_financeiro),
     db: Session = Depends(database.get_db)
 ):
     filtros = []

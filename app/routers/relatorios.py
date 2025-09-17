@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app import models, database
-from app.core.security import get_current_user
+from app.core.security import get_current_user, get_current_lideranca
 from datetime import datetime
 
 router = APIRouter(prefix="/relatorios", tags=["relatorios"])
@@ -11,7 +11,7 @@ def relatorio_financeiro(
     mes: int = Query(..., ge=1, le=12),
     ano: int = Query(..., ge=1900),
     db: Session = Depends(database.get_db),
-    user=Depends(get_current_user)
+    user=Depends(get_current_lideranca)
 ):
     from sqlalchemy import extract
     from sqlalchemy import func

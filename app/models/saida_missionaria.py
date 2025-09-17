@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Date
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
 from app.database import Base
 
 class SaidaMissionaria(Base):
@@ -8,3 +8,4 @@ class SaidaMissionaria(Base):
     valor = Column(Float, nullable=False)
     data = Column(Date, nullable=False)
     descricao = Column(String(255), nullable=True)
+    # Campo membro_id removido conforme solicitado

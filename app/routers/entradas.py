@@ -6,12 +6,12 @@ from app.schemas.entrada_missionaria import EntradaMissionariaCreate
 from app.schemas.entrada_projetos import EntradaProjetosCreate
 
 from app import models, schemas, database
-from app.core.security import get_current_user
+from app.core.security import get_current_user, get_current_financeiro
 
 router = APIRouter(prefix="/entradas", tags=["entradas"])
 
 @router.post("/", response_model=schemas.entrada_financeira.EntradaFinanceiraOut)
-def create_entrada(entrada: schemas.entrada_financeira.EntradaFinanceiraCreate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def create_entrada(entrada: schemas.entrada_financeira.EntradaFinanceiraCreate, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_entrada = models.entrada_financeira.EntradaFinanceira(**entrada.dict())
     db.add(db_entrada)
     db.commit()
@@ -25,7 +25,7 @@ def list_entradas_filtradas(
     nome_membro: str = None,
     data_inicio: str = None,
     data_fim: str = None,
-    user=Depends(get_current_user),
+    user=Depends(get_current_financeiro),
     db: Session = Depends(database.get_db),
     skip: int = 0,
     limit: int = 10
@@ -58,7 +58,7 @@ def list_entradas_filtradas(
 
 @router.get("/", response_model=List[dict])
 def list_entradas(
-    user=Depends(get_current_user),
+    user=Depends(get_current_financeiro),
     db: Session = Depends(database.get_db),
     skip: int = 0,
     limit: int = 10
@@ -79,7 +79,7 @@ def list_entradas(
     return result
 
 @router.get("/{entrada_id}", response_model=schemas.entrada_financeira.EntradaFinanceiraOut)
-def get_entrada(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def get_entrada(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     entrada = db.query(models.entrada_financeira.EntradaFinanceira).filter(models.entrada_financeira.EntradaFinanceira.id == entrada_id).first()
     if not entrada:
         raise HTTPException(status_code=404, detail="Entrada não encontrada")
@@ -88,7 +88,7 @@ def get_entrada(entrada_id: int, db: Session = Depends(database.get_db), user=De
 # buscar entrada missionária por id
 
 @router.get("/missoes/{entrada_id}", response_model=schemas.entrada_missionaria.EntradaMissionariaOut)
-def get_entrada_missionaria(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def get_entrada_missionaria(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     entrada = db.query(models.entrada_missionaria.EntradaMissionaria).filter(models.entrada_missionaria.EntradaMissionaria.id == entrada_id).first()
     if not entrada:
         raise HTTPException(status_code=404, detail="Entrada não encontrada")
@@ -97,7 +97,7 @@ def get_entrada_missionaria(entrada_id: int, db: Session = Depends(database.get_
 # buscar entrada de projetos por id
 
 @router.get("/projetos/{entrada_id}", response_model=schemas.entrada_projetos.EntradaProjetosOut)
-def get_entrada_projetos(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def get_entrada_projetos(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     entrada = db.query(models.entrada_projetos.EntradaProjetos).filter(models.entrada_projetos.EntradaProjetos.id == entrada_id).first()
     if not entrada:
         raise HTTPException(status_code=404, detail="Entrada não encontrada")
@@ -107,7 +107,7 @@ def get_entrada_projetos(entrada_id: int, db: Session = Depends(database.get_db)
 def create_entrada_missionaria(
     entrada: EntradaMissionariaCreate,
     db: Session = Depends(database.get_db),
-    user=Depends(get_current_user)
+    user=Depends(get_current_financeiro)
 ):
     db_entrada = models.entrada_missionaria.EntradaMissionaria(**entrada.dict())
     db.add(db_entrada)
@@ -122,7 +122,7 @@ def create_entrada_missionaria(
 def create_entrada_projetos(
     entrada: EntradaProjetosCreate,
     db: Session = Depends(database.get_db),
-    user=Depends(get_current_user)
+    user=Depends(get_current_financeiro)
 ):
     db_entrada = models.entrada_projetos.EntradaProjetos(**entrada.dict())
     db.add(db_entrada)
@@ -135,7 +135,7 @@ def create_entrada_projetos(
 
 # Atualizar entrada financeira
 @router.put("/financeiro/{entrada_id}", response_model=schemas.entrada_financeira.EntradaFinanceiraOut)
-def update_entrada_financeira(entrada_id: int, entrada: schemas.entrada_financeira.EntradaFinanceiraCreate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def update_entrada_financeira(entrada_id: int, entrada: schemas.entrada_financeira.EntradaFinanceiraCreate, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_entrada = db.query(models.entrada_financeira.EntradaFinanceira).filter_by(id=entrada_id).first()
     if not db_entrada:
         raise HTTPException(status_code=404, detail="Entrada financeira não encontrada")
@@ -147,7 +147,7 @@ def update_entrada_financeira(entrada_id: int, entrada: schemas.entrada_financei
 
 # Atualizar entrada missionária
 @router.put("/missoes/{entrada_id}", response_model=dict)
-def update_entrada_missionaria(entrada_id: int, entrada: dict, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def update_entrada_missionaria(entrada_id: int, entrada: dict, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_entrada = db.query(models.entrada_missionaria.EntradaMissionaria).filter_by(id=entrada_id).first()
     if not db_entrada:
         raise HTTPException(status_code=404, detail="Entrada missionária não encontrada")
@@ -161,7 +161,7 @@ def update_entrada_missionaria(entrada_id: int, entrada: dict, db: Session = Dep
 
 # Atualizar entrada de projetos
 @router.put("/projetos/{entrada_id}", response_model=dict)
-def update_entrada_projetos(entrada_id: int, entrada: dict, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def update_entrada_projetos(entrada_id: int, entrada: dict, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_entrada = db.query(models.entrada_projetos.EntradaProjetos).filter_by(id=entrada_id).first()
     if not db_entrada:
         raise HTTPException(status_code=404, detail="Entrada de projetos não encontrada")
@@ -175,7 +175,7 @@ def update_entrada_projetos(entrada_id: int, entrada: dict, db: Session = Depend
 
 # Deletar entrada financeira
 @router.delete("/financeiro/{entrada_id}", response_model=dict)
-def delete_entrada_financeira(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def delete_entrada_financeira(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_entrada = db.query(models.entrada_financeira.EntradaFinanceira).filter_by(id=entrada_id).first()
     if not db_entrada:
         raise HTTPException(status_code=404, detail="Entrada financeira não encontrada")
@@ -185,7 +185,7 @@ def delete_entrada_financeira(entrada_id: int, db: Session = Depends(database.ge
 
 # Deletar entrada missionária
 @router.delete("/missoes/{entrada_id}", response_model=dict)
-def delete_entrada_missionaria(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def delete_entrada_missionaria(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_entrada = db.query(models.entrada_missionaria.EntradaMissionaria).filter_by(id=entrada_id).first()
     if not db_entrada:
         raise HTTPException(status_code=404, detail="Entrada missionária não encontrada")
@@ -195,7 +195,7 @@ def delete_entrada_missionaria(entrada_id: int, db: Session = Depends(database.g
 
 # Deletar entrada de projetos
 @router.delete("/projetos/{entrada_id}", response_model=dict)
-def delete_entrada_projetos(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def delete_entrada_projetos(entrada_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_financeiro)):
     db_entrada = db.query(models.entrada_projetos.EntradaProjetos).filter_by(id=entrada_id).first()
     if not db_entrada:
         raise HTTPException(status_code=404, detail="Entrada de projetos não encontrada")
@@ -246,7 +246,7 @@ def list_entradas_por_membro(membro_id: int, db: Session = Depends(database.get_
 
 @router.get("/listar/missoes", response_model=List[dict])
 def list_entradas_missoes(
-    user=Depends(get_current_user),
+    user=Depends(get_current_financeiro),
     db: Session = Depends(database.get_db),
     skip: int = 0,
     limit: int = 10
@@ -268,7 +268,7 @@ def list_entradas_missoes(
 
 @router.get("/listar/projetos", response_model=List[dict])
 def list_entradas_projetos(
-    user=Depends(get_current_user),
+    user=Depends(get_current_financeiro),
     db: Session = Depends(database.get_db),
     skip: int = 0,
     limit: int = 10
@@ -293,7 +293,7 @@ def soma_entradas(
     tipo: str = None,  # 'financeira', 'missionaria', 'projetos' ou None para todas
     data_inicio: str = None,
     data_fim: str = None,
-    user=Depends(get_current_user),
+    user=Depends(get_current_financeiro),
     db: Session = Depends(database.get_db)
 ):
     filtros = []

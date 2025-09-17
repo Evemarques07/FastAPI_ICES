@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app import models, schemas, database
-from app.core.security import get_current_user
+from app.core.security import get_current_secretario
 
 router = APIRouter(prefix="/cargos", tags=["cargos"])
 
 @router.post("/", response_model=schemas.cargo.CargoOut)
-def create_cargo(cargo: schemas.cargo.CargoCreate, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def create_cargo(cargo: schemas.cargo.CargoCreate, db: Session = Depends(database.get_db), user=Depends(get_current_secretario)):
     db_cargo = models.cargo.Cargo(**cargo.dict())
     db.add(db_cargo)
     db.commit()
@@ -16,8 +16,8 @@ def create_cargo(cargo: schemas.cargo.CargoCreate, db: Session = Depends(databas
 
 
 @router.get("/", response_model=List[schemas.cargo.CargoOut])
-def list_cargos(db: Session = Depends(database.get_db), user=Depends(get_current_user)):
-    return db.query(models.cargo.Cargo).all()
+def list_cargos(db: Session = Depends(database.get_db), user=Depends(get_current_secretario)):
+    return db.query(models.cargo.Cargo).filter(models.cargo.Cargo.nome != "primeiro_usuario").all()
 
 # Endpoint para vincular membro a cargo
 @router.post("/vincular", status_code=201)
@@ -25,7 +25,7 @@ def vincular_membro_cargo(
     membro_id: int,
     cargo_id: int,
     db: Session = Depends(database.get_db),
-    user=Depends(get_current_user)
+    user=Depends(get_current_secretario)
 ):
     membro = db.query(models.membro.Membro).filter_by(id=membro_id).first()
     cargo = db.query(models.cargo.Cargo).filter_by(id=cargo_id).first()
@@ -46,7 +46,7 @@ def desvincular_membro_cargo(
     membro_id: int,
     cargo_id: int,
     db: Session = Depends(database.get_db),
-    user=Depends(get_current_user)
+    user=Depends(get_current_secretario)
 ):
     vinculo = db.query(models.cargo.CargoMembro).filter_by(membro_id=membro_id, cargo_id=cargo_id).first()
     if not vinculo:
@@ -57,15 +57,15 @@ def desvincular_membro_cargo(
 
 
 @router.get("/membro/{membro_id}", response_model=List[schemas.cargo.CargoOut])
-def list_cargos_por_membro(membro_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
+def list_cargos_por_membro(membro_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_secretario)):
     return db.query(models.cargo.Cargo) \
         .join(models.cargo.CargoMembro, models.cargo.Cargo.id == models.cargo.CargoMembro.cargo_id) \
         .filter(models.cargo.CargoMembro.membro_id == membro_id) \
         .all()
 
 @router.get("/membros", response_model=List[dict])
-def list_membros_com_cargos(db: Session = Depends(database.get_db), user=Depends(get_current_user)):
-    vinculos = db.query(models.cargo.CargoMembro).all()
+def list_membros_com_cargos(db: Session = Depends(database.get_db), user=Depends(get_current_secretario)):
+    vinculos = db.query(models.cargo.CargoMembro).filter(~((models.cargo.CargoMembro.membro_id == 1) & (models.cargo.CargoMembro.cargo_id == 1))).all()
     membros_com_cargos = []
     for vinculo in vinculos:
         membro = db.query(models.membro.Membro).filter_by(id=vinculo.membro_id).first()

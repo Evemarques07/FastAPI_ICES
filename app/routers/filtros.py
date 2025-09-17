@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app import models, database
-from app.core.security import get_current_user
+from app.core.security import get_current_financeiro
 
 router = APIRouter(prefix="/filtrar",tags=["filtros"])
 
@@ -17,7 +17,7 @@ def filtrar_entradas_saidas_gerais(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(database.get_db),
-    user=Depends(get_current_user)
+    user=Depends(get_current_financeiro)
 ):
     resultados = []
 

@@ -28,6 +28,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
 def get_current_user(db: Session = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -46,53 +47,100 @@ def get_current_user(db: Session = Depends(database.get_db), token: str = Depend
         raise credentials_exception
     return user
 
-# def has_cargo(user, cargo_nome):
-#     return any(
-#         cargo_membro.cargo.nome.lower() == cargo_nome.lower()
-#         for cargo_membro in getattr(user, 'cargos', [])
-#     )
+# Apenas quem tem "Tesoureiro" no token
+def get_current_financeiro(db: Session = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Acesso restrito ao Tesoureiro",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        cpf: str = payload.get("sub")
+        cargos = payload.get("cargos", [])
+        # Tesoureiro, Segundo_Tesoureiro, primeiro_usuario, Pastor
+        if cpf is None or ("Tesoureiro" not in cargos and "Segundo_Tesoureiro" not in cargos and "primeiro_usuario" not in cargos and "Pastor" not in cargos):
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = db.query(models.Usuario).filter(models.Usuario.cpf == cpf).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
-# def get_pastor(current_user=Depends(get_current_user)):
-#     if not has_cargo(current_user, 'Pastor'):
-#         raise HTTPException(status_code=403, detail="Acesso restrito a Pastores")
-#     return current_user
+def get_current_lideranca(db: Session = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Acesso restrito a Liderança",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        cpf: str = payload.get("sub")
+        cargos = payload.get("cargos", [])
+        # Secretario, Segundo_Secretario, Tesoureiro, Segundo_Tesoureiro, Pastor, Diacono, Presbitero, Diretor_Patrimonio, primeiro_usuario
+        if cpf is None or ("Secretario" not in cargos and "Segundo_Secretario" not in cargos and "Tesoureiro" not in cargos and "Segundo_Tesoureiro" not in cargos and "Pastor" not in cargos and "Diacono" not in cargos and "Presbitero" not in cargos and "Diretor_Patrimonio" not in cargos and "primeiro_usuario" not in cargos):
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = db.query(models.Usuario).filter(models.Usuario.cpf == cpf).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
-# def get_secretario(current_user=Depends(get_current_user)):
-#     if not has_cargo(current_user, 'Secretario'):
-#         raise HTTPException(status_code=403, detail="Acesso restrito a Secretários")
-#     return current_user
+def get_current_secretario(db: Session = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Acesso restrito ao Secretario",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        cpf: str = payload.get("sub")
+        cargos = payload.get("cargos", [])
+        if cpf is None or ("Secretario" not in cargos and "Segundo_Secretario" not in cargos and "primeiro_usuario" not in cargos and "Pastor" not in cargos):
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = db.query(models.Usuario).filter(models.Usuario.cpf == cpf).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
-# def get_segundo_secretario(current_user=Depends(get_current_user)):
-#     if not has_cargo(current_user, 'Segundo_Secretario'):
-#         raise HTTPException(status_code=403, detail="Acesso restrito a 2º Secretários")
-#     return current_user
+def get_current_diretor_patrimonio(db: Session = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Acesso restrito ao Diretor de Patrimônio",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        cpf: str = payload.get("sub")
+        cargos = payload.get("cargos", [])
+        if cpf is None or ("Diretor_Patrimonio" not in cargos and "primeiro_usuario" not in cargos and "Pastor" not in cargos):
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = db.query(models.Usuario).filter(models.Usuario.cpf == cpf).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
-# def get_tesoureiro(current_user=Depends(get_current_user)):
-#     if not has_cargo(current_user, 'Tesoureiro'):
-#         raise HTTPException(status_code=403, detail="Acesso restrito a Tesoureiros")
-#     return current_user
-
-# def get_segundo_tesoureiro(current_user=Depends(get_current_user)):
-#     if not has_cargo(current_user, 'Segundo_Tesoureiro'):
-#         raise HTTPException(status_code=403, detail="Acesso restrito a 2º Tesoureiros")
-#     return current_user
-
-# def get_diretor_patrimonio(current_user=Depends(get_current_user)):
-#     if not has_cargo(current_user, 'Diretor_Patrimonio'):
-#         raise HTTPException(status_code=403, detail="Acesso restrito a Diretor de Patrimônio")
-#     return current_user
-
-# def get_diacono(current_user=Depends(get_current_user)):
-#     if not has_cargo(current_user, 'Diacono'):
-#         raise HTTPException(status_code=403, detail="Acesso restrito a Diáconos")
-#     return current_user
-
-# def get_presbitero(current_user=Depends(get_current_user)):
-#     if not has_cargo(current_user, 'Presbitero'):
-#         raise HTTPException(status_code=403, detail="Acesso restrito a Presbíteros")
-#     return current_user
-
-# def get_primeiro_usuario(current_user=Depends(get_current_user)):
-#     if not has_cargo(current_user, 'primeiro_usuario'):
-#         raise HTTPException(status_code=403, detail="Acesso restrito ao usuário master")
-#     return current_user
+def get_current_diacono(db: Session = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Acesso restrito ao Diácono",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        cpf: str = payload.get("sub")
+        cargos = payload.get("cargos", [])
+        if cpf is None or ("Diácono" not in cargos and "primeiro_usuario" not in cargos and "Pastor" not in cargos):
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = db.query(models.Usuario).filter(models.Usuario.cpf == cpf).first()
+    if user is None:
+        raise credentials_exception
+    return user

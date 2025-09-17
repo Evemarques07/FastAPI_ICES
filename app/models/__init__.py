@@ -9,3 +9,4 @@ from .entrada_financeira import EntradaFinanceira
 from .saida_financeira import SaidaFinanceira
 from .evento import Evento
 from .escala import Escala
+from .filho import Filho

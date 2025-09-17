@@ -13,6 +13,14 @@ class MembroBase(BaseModel):
     cpf: Optional[constr(min_length=11, max_length=14)]
     foto: Optional[str] = None  # Agora é uma URL
     tipo: Optional[str] = 'membro'
+    sexo: Optional[str] = None
+    nome_pai: Optional[str] = None
+    nome_mae: Optional[str] = None
+    estado_civil: Optional[str] = None
+    data_casamento: Optional[date] = None
+    nome_conjuge: Optional[str] = None
+    data_nascimento_conjuge: Optional[date] = None
+    data_batismo: Optional[date] = None
 
 
 class MembroCreate(MembroBase):
@@ -28,8 +36,21 @@ class MembroUpdate(BaseModel):
     ativo: Optional[bool]
     cpf: Optional[constr(min_length=11, max_length=14)]
     tipo: Optional[str]
+    sexo: Optional[str] = None
+    nome_pai: Optional[str] = None
+    nome_mae: Optional[str] = None
+    estado_civil: Optional[str] = None
+    data_casamento: Optional[date] = None
+    nome_conjuge: Optional[str] = None
+    data_nascimento_conjuge: Optional[date] = None
+    data_batismo: Optional[date] = None
 
 class MembroOut(MembroBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class MembrosListOut(BaseModel):
+    total: int
+    membros: List[MembroOut]
