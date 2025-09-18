@@ -4,7 +4,7 @@ from typing import List
 from app import models, database
 from app.schemas.escala import EscalaOutComMembro
 from app.schemas import escala  
-from app.core.security import get_current_diacono
+from app.core.security import get_current_diacono, get_current_user
 from app.models.escala import Escala
 
 router = APIRouter(prefix="/escalas", tags=["escalas"])
@@ -18,7 +18,7 @@ def create_escala(escala_in: escala.EscalaCreate, db: Session = Depends(database
     return db_escala
 
 @router.get("/", response_model=List[escala.EscalaOutComMembro])
-def list_escalas(skip: int = 0, limit: int = 20, db: Session = Depends(database.get_db), user=Depends(get_current_diacono)):
+def list_escalas(skip: int = 0, limit: int = 20, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
     escalas = db.query(Escala).join(Escala.membro).offset(skip).limit(limit).all()
     result = []
     for escala_obj in escalas:
@@ -35,7 +35,7 @@ def list_escalas(skip: int = 0, limit: int = 20, db: Session = Depends(database.
     return result
 
 @router.get("/{escala_id}", response_model=escala.EscalaOut)
-def get_escala(escala_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_diacono)):
+def get_escala(escala_id: int, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
     escala_obj = db.query(models.escala.Escala).filter_by(id=escala_id).first()
     if not escala_obj:
         raise HTTPException(status_code=404, detail="Escala não encontrada")
