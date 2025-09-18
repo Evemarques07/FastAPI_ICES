@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import models, schemas, database
-from app.core.security import get_current_secretario, verify_password, get_password_hash
+from app.core.security import get_current_secretario, get_current_user, verify_password, get_password_hash
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
@@ -36,7 +36,7 @@ def criar_usuario(membro_id: int, db: Session = Depends(database.get_db), user=D
 
 
 @router.put("/senha")
-def editar_senha(nova_senha: str, db: Session = Depends(database.get_db), user=Depends(get_current_secretario)):
+def editar_senha(nova_senha: str, db: Session = Depends(database.get_db), user=Depends(get_current_user)):
     usuario = db.query(models.usuario.Usuario).filter_by(id=user.id).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
