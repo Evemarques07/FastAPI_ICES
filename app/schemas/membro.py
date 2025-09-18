@@ -8,12 +8,12 @@ class MembroBase(BaseModel):
     telefone: Optional[str]
     email: Optional[EmailStr]
     endereco: Optional[str]
-    data_entrada: date
+    data_entrada: Optional[date] = None
     ativo: Optional[bool] = True
     cpf: Optional[constr(min_length=11, max_length=14)]
     foto: Optional[str] = None  # Agora é uma URL
     tipo: Optional[str] = 'membro'
-    sexo: Optional[str] = None
+    sexo: Optional[str] = None  
     nome_pai: Optional[str] = None
     nome_mae: Optional[str] = None
     estado_civil: Optional[str] = None
