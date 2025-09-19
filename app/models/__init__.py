@@ -1,3 +1,4 @@
+from .patrimonio import Patrimonio
 from .usuario import Usuario
 from .entrada_projetos import EntradaProjetos
 from .saida_projetos import SaidaProjetos

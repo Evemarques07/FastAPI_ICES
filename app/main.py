@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, membros, cargos, entradas, saidas, relatorios, usuarios, filtros, eventos, escalas, filhos
+from app.routers import auth, membros, cargos, entradas, saidas, relatorios, usuarios, filtros, eventos, escalas, filhos, patrimonio
 
 app = FastAPI()
 
@@ -15,6 +15,7 @@ app.include_router(filtros.router)
 app.include_router(eventos.router)
 app.include_router(escalas.router)
 app.include_router(filhos.router)
+app.include_router(patrimonio.router)
 
 app.add_middleware(
 	CORSMiddleware,

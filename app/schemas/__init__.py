@@ -1,3 +1,4 @@
+from .patrimonio import *
 from .membro import *
 from .usuario import *
 from .cargo import *
